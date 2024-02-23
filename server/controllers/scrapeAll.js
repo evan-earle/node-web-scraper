@@ -1,17 +1,32 @@
 import puppeteer from "puppeteer";
+import psp from "prompt-sync-plus";
+import Post from "../models/Post.js";
 
+// Scrape up to 51 pages
 export const scrapeAll = async (req, res) => {
+  // Prompt to scrape number of pages
+  const prompt = psp({ defaultResponse: 1 });
+  const number = prompt("Enter number of pages to scrape: ");
+
+  let count = 0;
   // Launch a browser
   const browser = await puppeteer.launch();
   try {
+    console.log(`Processing ${number} page(s)...`);
     // Initialize a page
     const page = await browser.newPage();
 
+    // Set timeout to unlimited
+    page.setDefaultNavigationTimeout(0);
+
     // Navigate to a page
     const allLinks = [];
-    // Change 3 to 51 to scrape all 51 pages
-    for (let i = 1; i <= 3; i++) {
-      await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/${i}`);
+
+    // Scrape number of pages according to user input
+    for (let i = 1; i <= number; i++) {
+      await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/${i}`, {
+        waitUntil: "domcontentloaded",
+      });
 
       // Get the hrefs of all threads on the first page
       const links = await page.evaluate(() =>
@@ -39,11 +54,20 @@ export const scrapeAll = async (req, res) => {
             .trim(),
           username: e.querySelector(".thread_original_post .postauthor")
             .textContent,
-          title: e.querySelector(".thread_original_post h2").textContent,
-          dealLink: e.querySelector(".thread_original_post .post_offer a").href,
-          retailer: e
-            .querySelector(".thread_original_post .post_offer dd:last-child")
-            .textContent.replace(/\s+/g, " "),
+          title: e.querySelector(".thread_original_post h2").textContent.trim(),
+          // Ternary to check if dealLink/retailer exist
+          dealLink: e.querySelector(".thread_original_post .post_offer a")
+            ? e.querySelector(".thread_original_post .post_offer a").href
+            : "No deal link",
+          retailer: e.querySelector(
+            ".thread_original_post .post_offer dd:last-child"
+          )
+            ? e
+                .querySelector(
+                  ".thread_original_post .post_offer dd:last-child"
+                )
+                .textContent.replace(/\s+/g, " ")
+            : "No retailer",
           content: e
             .querySelector(".thread_original_post .content")
             .textContent.replace(/\s+/g, " "),
@@ -53,9 +77,29 @@ export const scrapeAll = async (req, res) => {
             : "No attachments",
         }))
       );
-      console.log(data);
+
+      // Check for duplicates in db
+      const post = await Post.findOne({ title: data[0].title });
+      if (post) {
+        continue;
+      } else {
+        // Save data to a new post in the model
+        const newPost = new Post({
+          date: data[0].date,
+          username: data[0].username,
+          title: data[0].title,
+          dealLink: data[0].dealLink,
+          retailer: data[0].retailer,
+          content: data[0].content,
+          attachments: data[0].attachments,
+        });
+        await newPost.save();
+        count += 1;
+      }
     }
-    console.log("end of data");
+    count > 0
+      ? console.log(`Processing complete. Added ${count} new entries!`)
+      : console.log("Processing complete. No new entries.");
   } catch (err) {
     // Catch error and log/send it
     console.log(err);

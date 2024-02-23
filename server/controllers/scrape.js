@@ -1,12 +1,18 @@
 import puppeteer from "puppeteer";
 import Post from "../models/Post.js";
 
+// Scrapes the first page
 export const scrape = async (req, res) => {
+  let count = 0;
   // Launch a browser
   const browser = await puppeteer.launch();
   try {
+    console.log("Processing...");
     // Initialize a page
     const page = await browser.newPage();
+
+    // Set timeout to unlimited
+    page.setDefaultNavigationTimeout(0);
 
     // Navigate to a page
     await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/`);
@@ -20,8 +26,6 @@ export const scrape = async (req, res) => {
         (e) => e.href
       )
     );
-
-    res.send(links);
 
     // Loop through links array
     for (let i = 0; i < links.length; i++) {
@@ -37,11 +41,20 @@ export const scrape = async (req, res) => {
             .trim(),
           username: e.querySelector(".thread_original_post .postauthor")
             .textContent,
-          title: e.querySelector(".thread_original_post h2").textContent,
-          dealLink: e.querySelector(".thread_original_post .post_offer a").href,
-          retailer: e
-            .querySelector(".thread_original_post .post_offer dd:last-child")
-            .textContent.replace(/\s+/g, " "),
+          title: e.querySelector(".thread_original_post h2").textContent.trim(),
+          // Ternary to check if dealLink/retailer exist
+          dealLink: e.querySelector(".thread_original_post .post_offer a")
+            ? e.querySelector(".thread_original_post .post_offer a").href
+            : "No deal link",
+          retailer: e.querySelector(
+            ".thread_original_post .post_offer dd:last-child"
+          )
+            ? e
+                .querySelector(
+                  ".thread_original_post .post_offer dd:last-child"
+                )
+                .textContent.replace(/\s+/g, " ")
+            : "No retailer",
           content: e
             .querySelector(".thread_original_post .content")
             .textContent.replace(/\s+/g, " "),
@@ -51,10 +64,10 @@ export const scrape = async (req, res) => {
             : "No attachments",
         }))
       );
-      console.log(data);
 
       // Check for duplicates in db
       const post = await Post.findOne({ title: data[0].title });
+
       if (post) {
         continue;
       } else {
@@ -69,9 +82,12 @@ export const scrape = async (req, res) => {
           attachments: data[0].attachments,
         });
         await newPost.save();
+        count += 1;
       }
     }
-    console.log("end of data");
+    count > 0
+      ? console.log(`Processing complete. Added ${count} new entries!`)
+      : console.log("Processing complete. No new entries.");
   } catch (err) {
     // Catch error and log/send it
     console.log(err);
