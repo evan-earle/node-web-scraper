@@ -10,10 +10,18 @@ export const scrape = async (res) => {
     // Navigate to a page
     await page.goto("https://forums.redflagdeals.com/hot-deals-f9/");
 
-    // Testing
-    const title = await page.evaluate(() => document.title);
-    console.log(title);
-    res.send(title);
+    // Get the hrefs of all threads on the first page
+    const links = await page.evaluate(() =>
+      Array.from(
+        document.querySelectorAll(
+          "#site_content .thread_info_title h3 a:last-child"
+        ),
+        (e) => e.href
+      )
+    );
+
+    res.send(links);
+    console.log(links.length);
   } catch (err) {
     console.log(err);
     res.send("Error");
