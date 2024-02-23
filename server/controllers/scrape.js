@@ -1,13 +1,18 @@
 import puppeteer from "puppeteer";
+import psp from "prompt-sync-plus";
 import Post from "../models/Post.js";
 
-// Scrapes the first page
+// Scrape up to 51 pages
 export const scrape = async (req, res) => {
+  // Prompt to scrape number of pages
+  const prompt = psp({ defaultResponse: 1 });
+  const number = prompt("Enter number of pages to scrape: ");
+
   let count = 0;
   // Launch a browser
   const browser = await puppeteer.launch();
   try {
-    console.log("Processing...");
+    console.log(`Processing ${number} page(s)...`);
     // Initialize a page
     const page = await browser.newPage();
 
@@ -15,21 +20,29 @@ export const scrape = async (req, res) => {
     page.setDefaultNavigationTimeout(0);
 
     // Navigate to a page
-    await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/`);
+    const allLinks = [];
 
-    // Get the hrefs of all threads on the first page
-    const links = await page.evaluate(() =>
-      Array.from(
-        document.querySelectorAll(
-          "#site_content .thread_info_title h3 a:last-child"
-        ),
-        (e) => e.href
-      )
-    );
+    // Scrape number of pages according to user input
+    for (let i = 1; i <= number; i++) {
+      await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/${i}`, {
+        waitUntil: "domcontentloaded",
+      });
+
+      // Get the hrefs of all threads on the first page
+      const links = await page.evaluate(() =>
+        Array.from(
+          document.querySelectorAll(
+            "#site_content .thread_info_title h3 a:last-child"
+          ),
+          (e) => e.href
+        )
+      );
+      allLinks.push(...links);
+    }
 
     // Loop through links array
-    for (let i = 0; i < links.length; i++) {
-      await page.goto(`${links[i]}`);
+    for (let i = 0; i < allLinks.length; i++) {
+      await page.goto(`${allLinks[i]}`);
       // Get data from first post of each thread
       const data = await page.evaluate(() =>
         // Pulling specific data from elements (date, username, title of post, deal link, retailer, content, attachments)
@@ -67,7 +80,6 @@ export const scrape = async (req, res) => {
 
       // Check for duplicates in db
       const post = await Post.findOne({ title: data[0].title });
-
       if (post) {
         continue;
       } else {
