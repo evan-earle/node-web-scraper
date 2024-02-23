@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer";
 
-export const scrapeAll = async (res) => {
+export const scrapeAll = async (req, res) => {
   // Launch a browser
   const browser = await puppeteer.launch();
   try {
@@ -30,7 +30,7 @@ export const scrapeAll = async (res) => {
       await page.goto(`${allLinks[i]}`);
       // Get data from first post of each thread
       const data = await page.evaluate(() =>
-        // Pulling specific data from elements (date, username, title of post, content, attachments)
+        // Pulling specific data from elements (date, username, title of post, deal link, retailer, content, attachments)
         Array.from(document.querySelectorAll(".thread_original_post"), (e) => ({
           date: e
             .querySelector(".post_dateline")

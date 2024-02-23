@@ -4,25 +4,14 @@ import cors from "cors";
 import morgan from "morgan";
 import { connectToDB } from "./config/database.js";
 import dotenv from "dotenv";
-import { scrape } from "./scrape.js";
-import { scrapeAll } from "./scrapeAll.js";
+import allRoutes from "./routes/index.js";
 dotenv.config({ path: "./config/.env" });
 
 // Create an express app
 const app = express();
 
 // Routes
-app.get("/", (req, res) => {
-  res.send("Puppeteer server is up and running");
-});
-
-app.get("/scrape", (req, res) => {
-  scrape(res);
-});
-
-app.get("/scrapeAll", (req, res) => {
-  scrapeAll(res);
-});
+app.use("/api", allRoutes);
 
 // Middleware
 app.use(express.json());
