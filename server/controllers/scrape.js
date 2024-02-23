@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer";
+import Post from "../models/Post.js";
 
 export const scrape = async (req, res) => {
   // Launch a browser
@@ -51,6 +52,17 @@ export const scrape = async (req, res) => {
         }))
       );
       console.log(data);
+      // Save data to a new post in the model
+      const newPost = new Post({
+        date: data[0].date,
+        username: data[0].username,
+        title: data[0].title,
+        dealLink: data[0].dealLink,
+        retailer: data[0].retailer,
+        content: data[0].content,
+        attachments: data[0].attachments,
+      });
+      await newPost.save();
     }
     console.log("end of data");
   } catch (err) {
