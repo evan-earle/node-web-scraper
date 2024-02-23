@@ -20,8 +20,11 @@ export const scrape = async (res) => {
       )
     );
 
-    res.send(links);
-    console.log(links.length);
+    // Loop through links array
+    for (let i = 0; i < links.length; i++) {
+      console.log(links[i]);
+      await page.goto(`${links[i]}`);
+    }
   } catch (err) {
     console.log(err);
     res.send("Error");
