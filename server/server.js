@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { connectToDB } from "./config/database.js";
 import dotenv from "dotenv";
 import { scrape } from "./scrape.js";
+import { scrapeAll } from "./scrapeAll.js";
 dotenv.config({ path: "./config/.env" });
 
 // Create an express app
@@ -17,6 +18,10 @@ app.get("/", (req, res) => {
 
 app.get("/scrape", (req, res) => {
   scrape(res);
+});
+
+app.get("/scrapeAll", (req, res) => {
+  scrapeAll(res);
 });
 
 // Middleware

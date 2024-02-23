@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer";
 
-export const scrape = async (res) => {
+export const scrapeAll = async (res) => {
   // Launch a browser
   const browser = await puppeteer.launch();
   try {
@@ -8,23 +8,26 @@ export const scrape = async (res) => {
     const page = await browser.newPage();
 
     // Navigate to a page
-    await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/`);
+    const allLinks = [];
+    // Change 3 to 51 to scrape all 51 pages
+    for (let i = 1; i <= 2; i++) {
+      await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/${i}`);
 
-    // Get the hrefs of all threads on the first page
-    const links = await page.evaluate(() =>
-      Array.from(
-        document.querySelectorAll(
-          "#site_content .thread_info_title h3 a:last-child"
-        ),
-        (e) => e.href
-      )
-    );
-
-    res.send(links);
+      // Get the hrefs of all threads on the first page
+      const links = await page.evaluate(() =>
+        Array.from(
+          document.querySelectorAll(
+            "#site_content .thread_info_title h3 a:last-child"
+          ),
+          (e) => e.href
+        )
+      );
+      allLinks.push(...links);
+    }
 
     // Loop through links array
-    for (let i = 0; i < links.length; i++) {
-      await page.goto(`${links[i]}`);
+    for (let i = 0; i < allLinks.length; i++) {
+      await page.goto(`${allLinks[i]}`);
       // Get data from first post of each thread
       const data = await page.evaluate(() =>
         // Pulling specific data from elements (date, username, title of post, content, attachments)
