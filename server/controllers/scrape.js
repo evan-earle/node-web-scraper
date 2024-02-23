@@ -52,23 +52,30 @@ export const scrape = async (req, res) => {
         }))
       );
       console.log(data);
-      // Save data to a new post in the model
-      const newPost = new Post({
-        date: data[0].date,
-        username: data[0].username,
-        title: data[0].title,
-        dealLink: data[0].dealLink,
-        retailer: data[0].retailer,
-        content: data[0].content,
-        attachments: data[0].attachments,
-      });
-      await newPost.save();
+
+      // Check for duplicates in db
+      const post = await Post.findOne({ title: data[0].title });
+      if (post) {
+        continue;
+      } else {
+        // Save data to a new post in the model
+        const newPost = new Post({
+          date: data[0].date,
+          username: data[0].username,
+          title: data[0].title,
+          dealLink: data[0].dealLink,
+          retailer: data[0].retailer,
+          content: data[0].content,
+          attachments: data[0].attachments,
+        });
+        await newPost.save();
+      }
     }
     console.log("end of data");
   } catch (err) {
     // Catch error and log/send it
     console.log(err);
-    // res.send("Error");
+    res.send("Error");
   } finally {
     // Close the browser
     await browser.close();
