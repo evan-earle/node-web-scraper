@@ -2,13 +2,12 @@ import puppeteer from "puppeteer";
 import psp from "prompt-sync-plus";
 import Post from "../models/Post.js";
 
-// Scrape up to 51 pages
 export const scrape = async (req, res) => {
-  // Prompt to scrape number of pages
+  let count = 0;
+  // Prompt to scrape number of pages up to 51
   const prompt = psp({ defaultResponse: 1 });
   const number = prompt("Enter number of pages to scrape: ");
 
-  let count = 0;
   // Launch a browser
   const browser = await puppeteer.launch();
   try {
@@ -22,13 +21,13 @@ export const scrape = async (req, res) => {
     // Navigate to a page
     const allLinks = [];
 
-    // Scrape number of pages according to user input
+    // Loop through number of pages according to user input
     for (let i = 1; i <= number; i++) {
       await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/${i}`, {
         waitUntil: "domcontentloaded",
       });
 
-      // Get the hrefs of all threads on the first page
+      // Get the hrefs of all threads on the page
       const links = await page.evaluate(() =>
         Array.from(
           document.querySelectorAll(
@@ -37,15 +36,17 @@ export const scrape = async (req, res) => {
           (e) => e.href
         )
       );
+      // Push the hrefs to an array (spread puts it in one array)
       allLinks.push(...links);
     }
 
     // Loop through links array
     for (let i = 0; i < allLinks.length; i++) {
+      // Go to each link in the array
       await page.goto(`${allLinks[i]}`);
       // Get data from first post of each thread
       const data = await page.evaluate(() =>
-        // Pulling specific data from elements (date, username, title of post, deal link, retailer, content, attachments)
+        // Pulling specific data from elements (date, username, title of post, deal link, retailer, content, attachments) and add to an array
         Array.from(document.querySelectorAll(".thread_original_post"), (e) => ({
           date: e
             .querySelector(".post_dateline")
@@ -71,7 +72,7 @@ export const scrape = async (req, res) => {
           content: e
             .querySelector(".thread_original_post .content")
             .textContent.replace(/\s+/g, " "),
-          // If there are attachments add href otherwise null
+          // Ternary to check if attachments exist
           attachments: e.querySelector(".thread_original_post .attachbox")
             ? e.querySelector(".thread_original_post .attachbox a").href
             : "No attachments",
@@ -80,8 +81,10 @@ export const scrape = async (req, res) => {
 
       // Check for duplicates in db
       const post = await Post.findOne({ title: data[0].title });
+      // If post already exists, continue through the loop
       if (post) {
         continue;
+        // If post doesn't exist, save to the db
       } else {
         // Save data to a new post in the model
         const newPost = new Post({
@@ -94,18 +97,21 @@ export const scrape = async (req, res) => {
           attachments: data[0].attachments,
         });
         await newPost.save();
+        // Count the new post
         count += 1;
       }
     }
-    count > 0
+    // Log how many new entries were added to the db
+    return count > 0
       ? console.log(`Processing complete. Added ${count} new entries!`)
       : console.log("Processing complete. No new entries.");
   } catch (err) {
     // Catch error and log/send it
     console.log(err);
-    res.send("Error");
+    return res.send("Error");
   } finally {
     // Close the browser
     await browser.close();
+    return;
   }
 };
