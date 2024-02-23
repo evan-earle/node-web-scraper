@@ -20,11 +20,35 @@ export const scrape = async (res) => {
       )
     );
 
+    res.send(links);
+
     // Loop through links array
     for (let i = 0; i < links.length; i++) {
-      console.log(links[i]);
       await page.goto(`${links[i]}`);
+      // Get data from first post of each thread
+      const data = await page.evaluate(() =>
+        // Pulling specific data from elements (date, username, title of post, content, attachments)
+        Array.from(document.querySelectorAll(".thread_original_post"), (e) => ({
+          date: e
+            .querySelector(".post_dateline")
+            .textContent.replace(/\s+/g, " ")
+            .split("#")[0]
+            .trim(),
+          username: e.querySelector(".thread_original_post .postauthor")
+            .textContent,
+          title: e.querySelector(".thread_original_post h2").textContent,
+          content: e
+            .querySelector(".thread_original_post .content")
+            .textContent.replace(/\s+/g, " "),
+          // If there are attachments add href otherwise null
+          attachments: e.querySelector(".thread_original_post .attachbox")
+            ? e.querySelector(".thread_original_post .attachbox a").href
+            : "No attachments",
+        }))
+      );
+      console.log(data);
     }
+    console.log("end of data");
   } catch (err) {
     console.log(err);
     res.send("Error");
