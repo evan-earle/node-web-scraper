@@ -81,11 +81,8 @@ export const scrape = async (req, res) => {
 
       // Check for duplicates in db
       const post = await Post.findOne({ title: data[0].title });
-      // If post already exists, continue through the loop
-      if (post) {
-        continue;
-        // If post doesn't exist, save to the db
-      } else {
+      // If post doesn't exist, save to the db
+      if (!post) {
         // Save data to a new post in the model
         const newPost = new Post({
           date: data[0].date,
