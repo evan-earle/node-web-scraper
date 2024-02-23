@@ -10,7 +10,7 @@ export const scrapeAll = async (res) => {
     // Navigate to a page
     const allLinks = [];
     // Change 3 to 51 to scrape all 51 pages
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 3; i++) {
       await page.goto(`https://forums.redflagdeals.com/hot-deals-f9/${i}`);
 
       // Get the hrefs of all threads on the first page
@@ -40,6 +40,10 @@ export const scrapeAll = async (res) => {
           username: e.querySelector(".thread_original_post .postauthor")
             .textContent,
           title: e.querySelector(".thread_original_post h2").textContent,
+          dealLink: e.querySelector(".thread_original_post .post_offer a").href,
+          retailer: e
+            .querySelector(".thread_original_post .post_offer dd:last-child")
+            .textContent.replace(/\s+/g, " "),
           content: e
             .querySelector(".thread_original_post .content")
             .textContent.replace(/\s+/g, " "),

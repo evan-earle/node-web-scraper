@@ -37,6 +37,10 @@ export const scrape = async (res) => {
           username: e.querySelector(".thread_original_post .postauthor")
             .textContent,
           title: e.querySelector(".thread_original_post h2").textContent,
+          dealLink: e.querySelector(".thread_original_post .post_offer a").href,
+          retailer: e
+            .querySelector(".thread_original_post .post_offer dd:last-child")
+            .textContent.replace(/\s+/g, " "),
           content: e
             .querySelector(".thread_original_post .content")
             .textContent.replace(/\s+/g, " "),
