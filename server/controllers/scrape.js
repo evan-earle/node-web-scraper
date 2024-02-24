@@ -46,7 +46,7 @@ export const scrape = async (req, res) => {
       await page.goto(`${allLinks[i]}`);
       // Get data from first post of each thread
       const data = await page.evaluate(() =>
-        // Pulling specific data from elements (date, username, title of post, deal link, retailer, content, attachments) and add to an array
+        // Pulling specific data from elements (date, username, title of post, deal link, retailer, content, attachments) and add to an array of objects
         Array.from(document.querySelectorAll(".thread_original_post"), (e) => ({
           date: e
             .querySelector(".post_dateline")
@@ -78,7 +78,7 @@ export const scrape = async (req, res) => {
             : "No attachments",
         }))
       );
-
+      console.log(data);
       // Check for duplicates in db
       const post = await Post.findOne({ title: data[0].title });
       // If post doesn't exist, save to the db
