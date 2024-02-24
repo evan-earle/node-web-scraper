@@ -1,5 +1,5 @@
 Node Web Scraper <br />
-This is a back-end program that scrapes the first post of every thread of the source website and stores them in MongoDB. <br />
+This is a back-end program that scrapes the first post of every thread of the source website and stores them in MongoDB.
 The program will scrape any number of pages according to the user's input. It will not store duplicate posts.<br />
 Source: https://forums.redflagdeals.com/hot-deals-f9/
 <br /><br />
