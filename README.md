@@ -16,8 +16,8 @@ This was a fun challenge! I had never tried web scraping before so I had to lear
 storing the data in the database, while checking for duplicates. 
 <br /><br />
 How to Run<br />
-Run npm install
-Connect to MongoDB and add connection string to .env as well as port
-NPM run dev
-Navigate to `http://localhost:${PORT}/api/scrape` in the browser
+Run npm install<br />
+Connect to MongoDB and add connection string to .env as well as port<br />
+NPM run dev<br />
+Navigate to `http://localhost:${PORT}/api/scrape` in the browser<br />
 Follow the prompts in the console
