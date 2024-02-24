@@ -18,6 +18,7 @@ storing the data in the database, while checking for duplicates.
 How to Run<br />
 Run npm install<br />
 Connect to MongoDB and add connection string to .env as well as port<br />
+cd into server<br />
 NPM run dev<br />
 Navigate to `http://localhost:${PORT}/api/scrape` in the browser<br />
 Follow the prompts in the console
