@@ -78,7 +78,7 @@ export const scrape = async (req, res) => {
             : "No attachments",
         }))
       );
-      console.log(data);
+
       // Check for duplicates in db
       const post = await Post.findOne({ title: data[0].title });
       // If post doesn't exist, save to the db
