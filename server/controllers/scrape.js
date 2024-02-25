@@ -4,7 +4,7 @@ import Post from "../models/Post.js";
 
 export const scrape = async (req, res) => {
   let count = 0;
-  // Prompt to scrape number of pages up to 51
+  // Prompt to scrape number of pages up to 52
   const prompt = psp({ defaultResponse: 1 });
   const number = prompt("Enter number of pages to scrape: ");
 
